@@ -7,6 +7,11 @@ if (!isset($_POST['producto'], $_POST['precio'])) {
 // namespace para poder importar las clases de otros archivos
 use PayPal\Api\Payer;
 use PayPal\Api\Item;
+use PayPal\Api\ItemList;
+use PayPal\Api\Details;
+use PayPal\Api\Amount;
+use PayPal\Api\Transaction;
+use PayPal\Api\RedirectUrls;
 
 require 'config.php';
 
@@ -25,4 +30,28 @@ $articulo->setName($producto)
 		 ->setQuantity(1)
 		 ->setPrice($precio);
 
-echo $articulo->getQuantity();
+
+
+$listaArticulos = new ItemList();
+$listaArticulos->setItems(array($articulo));
+
+$detalles = new Details();
+$detalles->setShipping($envio)
+		 ->setSubtotal($precio);
+
+$cantidad = new Amount();
+$cantidad->setCurrency('USD')
+		 ->setTotal($precio)
+		 ->setDetails($detalles);
+
+$transaccion = new Transaction();
+$transaccion->setAmount($cantidad)
+			->setItemList($listaArticulos)
+			->setDescription('Pago')
+			->setInvoiceNumber(uniqid());
+
+$redireccionar = new RedirectUrls();
+$redireccionar->setReturnUrl(URL_SITIO . "/pago_finalizado.php?exito=true")
+			  ->setCancelUrl(URL_SITIO . "/pago_finalizado.php?exito=false");
+
+echo $redireccionar->getReturnUrl();
